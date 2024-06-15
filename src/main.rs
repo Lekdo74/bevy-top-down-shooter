@@ -7,6 +7,8 @@ use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::time::Stopwatch;
 use bevy::window::{PrimaryWindow, WindowMode};
+use rand::rngs::ThreadRng;
+use rand::Rng;
 
 pub fn close_on_esc(
     mut commands: Commands<'_, '_>,
@@ -36,13 +38,18 @@ const TILE_H: u32 = 16;
 const SPRITE_SHEET_W: u32 = 4;
 const SPRITE_SHEET_H: u32 = 4;
 
+// World
+const NUM_WORLD_DECORATIONS: u32 = 1000;
+const WORLD_W: f32 = 4096.0;
+const WORLD_H: f32 = 2160.0;
+
 //Player
 const PLAYER_SPEED: f32 = 2.0;
 
 // Gun
 const GUN_HEIGHT: f32 = 16.0;
 const BULLET_SPAWN_INTERVAL: f32 = 0.1;
-const BULLET_SPEED: f32 = 8.0;
+const BULLET_SPEED: f32 = 10.0;
 
 // Colors
 const BG_COLOR: (u8, u8, u8) = (251, 245, 239);
@@ -110,7 +117,10 @@ fn main() {
         .insert_resource(CursorPosition(None))
         // Systems
         .add_systems(OnEnter(GameState::Loading), load_assets)
-        .add_systems(OnEnter(GameState::GameInit), (setup_camera, init_world))
+        .add_systems(
+            OnEnter(GameState::GameInit),
+            (setup_camera, init_world, spawn_world_decorations),
+        )
         .add_systems(
             Update,
             (
@@ -119,6 +129,7 @@ fn main() {
                 update_cursor_position,
                 handle_gun_input,
                 update_bullets,
+                camera_follow_player,
             )
                 .run_if(in_state(GameState::InGame)),
         )
@@ -158,7 +169,7 @@ fn init_world(
 ) {
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+            transform: Transform::from_translation(vec3(0.0, 0.0, 10.0)).with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
             texture: image_handle.0.clone().unwrap(),
             ..default()
         },
@@ -170,7 +181,7 @@ fn init_world(
     ));
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+            transform: Transform::from_translation(vec3(0.0, 0.0, 12.0)).with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
             texture: image_handle.0.clone().unwrap(),
             ..default()
         },
@@ -183,6 +194,45 @@ fn init_world(
     ));
 
     next_state.set(GameState::InGame);
+}
+
+fn spawn_world_decorations(
+    mut commands: Commands,
+    texture_atlas: Res<GlobalTextureAtlasHandle>,
+    image_handle: Res<GlobalSpriteSheetHandle>,
+) {
+    let mut rng: ThreadRng = rand::thread_rng();
+    for _ in 0..NUM_WORLD_DECORATIONS {
+        let x = rng.gen_range(-WORLD_W..=WORLD_W);
+        let y = rng.gen_range(-WORLD_H..=WORLD_H);
+        commands.spawn((
+            SpriteBundle {
+                transform: Transform::from_translation(vec3(x, y, 0.0))
+                    .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+                texture: image_handle.0.clone().unwrap(),
+                ..default()
+            },
+            TextureAtlas {
+                layout: texture_atlas.0.clone().unwrap(),
+                index: rng.gen_range(4..=6),
+            },
+        ));
+    }
+}
+
+fn camera_follow_player(
+    player_query: Query<&mut Transform, With<Player>>,
+    mut camera_query: Query<&mut Transform, (With<Camera>, Without<Player>)>
+){
+    if player_query.is_empty() || camera_query.is_empty(){
+        return;
+    }
+
+    let mut camera_transform = camera_query.single_mut();
+    let player_transform = player_query.single().translation;
+    let (x, y) = (player_transform.x, player_transform.y);
+
+    camera_transform.translation = camera_transform.translation.lerp(vec3(x, y, 0.0), 0.1);
 }
 
 fn handle_player_input(
@@ -255,7 +305,7 @@ fn handle_gun_input(
     gun_timer.0.reset();
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(vec3(gun_pos.x, gun_pos.y, -1.0))
+            transform: Transform::from_translation(vec3(gun_pos.x, gun_pos.y, 11.0))
                 .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
             texture: image_handle.0.clone().unwrap(),
             ..default()
@@ -286,14 +336,12 @@ fn update_cursor_position(
         .map(|ray| ray.origin.truncate());
 }
 
-fn update_bullets(
-    mut bullet_query: Query<(&mut Transform, &BulletDirection), With<Bullet>>,
-) {
-    if bullet_query.is_empty(){
+fn update_bullets(mut bullet_query: Query<(&mut Transform, &BulletDirection), With<Bullet>>) {
+    if bullet_query.is_empty() {
         return;
     }
 
-    for(mut t, dir) in bullet_query.iter_mut(){
+    for (mut t, dir) in bullet_query.iter_mut() {
         t.translation += dir.0.normalize() * Vec3::splat(BULLET_SPEED);
     }
 }

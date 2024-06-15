@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
+use bevy::window::WindowMode;
 
 pub fn close_on_esc(
     mut commands: Commands<'_, '_>,
@@ -19,12 +20,13 @@ pub fn close_on_esc(
 }
 
 // Window
-const WW: f32 = 1200.0;
-const WH: f32 = 900.0;
-const BG_COLOR: (u8, u8, u8) = (25, 20, 43);
+// const WW: f32 = 1024.0;
+// const WH: f32 = 576.0;
+const BG_COLOR: (u8, u8, u8) = (251, 245, 239);
 
 // Sprites
 const SPRITE_SHEET_PATH: &str = "assets.png";
+const SPRITE_SCALE_FACTOR: f32 = 3.0;
 const TILE_W: u32 = 16;
 const TILE_H: u32 = 16;
 const SPRITE_SHEET_W: u32 = 4;
@@ -44,9 +46,9 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        resizable: true,
+                        resizable: false,
                         focused: true,
-                        resolution: (WW, WH).into(),
+                        mode: WindowMode::BorderlessFullscreen,
                         ..default()
                     }),
                     ..default()
@@ -55,6 +57,7 @@ fn main() {
         .insert_resource(ClearColor(Color::srgb_u8(
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))
+        .insert_resource(Msaa::Off)
         .add_systems(Startup, (setup_camera, spawn_player))
         .add_systems(Update, close_on_esc)
         .run();
@@ -70,12 +73,18 @@ fn spawn_player(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let texture = asset_server.load(SPRITE_SHEET_PATH);
-    let layout = TextureAtlasLayout::from_grid(UVec2::new(TILE_W, TILE_H), SPRITE_SHEET_W , SPRITE_SHEET_H, None, None);
+    let layout = TextureAtlasLayout::from_grid(
+        UVec2::new(TILE_W, TILE_H),
+        SPRITE_SHEET_W,
+        SPRITE_SHEET_H,
+        None,
+        None,
+    );
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_scale(Vec3::splat(6.0)),
+            transform: Transform::from_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
             texture,
             ..default()
         },

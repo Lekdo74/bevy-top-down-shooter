@@ -18,9 +18,17 @@ pub fn close_on_esc(
     }
 }
 
+// Window
 const WW: f32 = 1200.0;
 const WH: f32 = 900.0;
 const BG_COLOR: (u8, u8, u8) = (25, 20, 43);
+
+// Sprites
+const SPRITE_SHEET_PATH: &str = "assets.png";
+const TILE_W: u32 = 16;
+const TILE_H: u32 = 16;
+const SPRITE_SHEET_W: u32 = 4;
+const SPRITE_SHEET_H: u32 = 4;
 
 fn main() {
     App::new()
@@ -61,8 +69,8 @@ fn spawn_player(
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    let texture = asset_server.load("assets.png");
-    let layout = TextureAtlasLayout::from_grid(UVec2::splat(24), 7, 1, None, None);
+    let texture = asset_server.load(SPRITE_SHEET_PATH);
+    let layout = TextureAtlasLayout::from_grid(UVec2::new(TILE_W, TILE_H), SPRITE_SHEET_W , SPRITE_SHEET_H, None, None);
     let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
     commands.spawn((

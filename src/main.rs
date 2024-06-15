@@ -22,7 +22,6 @@ pub fn close_on_esc(
 // Window
 // const WW: f32 = 1024.0;
 // const WH: f32 = 576.0;
-const BG_COLOR: (u8, u8, u8) = (251, 245, 239);
 
 // Sprites
 const SPRITE_SHEET_PATH: &str = "assets.png";
@@ -32,8 +31,33 @@ const TILE_H: u32 = 16;
 const SPRITE_SHEET_W: u32 = 4;
 const SPRITE_SHEET_H: u32 = 4;
 
+//Player
+const PLAYER_SPEED: f32 = 2.0;
+
+// Colors
+const BG_COLOR: (u8, u8, u8) = (251, 245, 239);
+
+// Resources
+#[derive(Resource)]
+struct GlobalTextureAtlasHandle(Option<Handle<TextureAtlasLayout>>);
+#[derive(Resource)]
+struct GlobalSpriteSheetHandle(Option<Handle<Image>>);
+
+// Components
+#[derive(Component)]
+struct Player;
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum GameState {
+    #[default]
+    Loading,
+    GameInit,
+    InGame,
+}
+
 fn main() {
     App::new()
+        .init_state::<GameState>()
         .add_plugins(
             DefaultPlugins
                 .set(RenderPlugin {
@@ -58,21 +82,28 @@ fn main() {
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))
         .insert_resource(Msaa::Off)
-        .add_systems(Startup, (setup_camera, spawn_player))
+        // Custom resources
+        .insert_resource(GlobalTextureAtlasHandle(None))
+        .insert_resource(GlobalSpriteSheetHandle(None))
+        // Systems
+        .add_systems(OnEnter(GameState::Loading), load_assets)
+        .add_systems(OnEnter(GameState::GameInit), (setup_camera, init_world))
+        .add_systems(
+            Update,
+            (handle_player_input).run_if(in_state(GameState::InGame)),
+        )
         .add_systems(Update, close_on_esc)
         .run();
 }
 
-fn setup_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
-}
-
-fn spawn_player(
-    mut commands: Commands,
+fn load_assets(
+    mut texture_atlas: ResMut<GlobalTextureAtlasHandle>,
+    mut image_handle: ResMut<GlobalSpriteSheetHandle>,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut next_state: ResMut<NextState<GameState>>,
 ) {
-    let texture = asset_server.load(SPRITE_SHEET_PATH);
+    image_handle.0 = Some(asset_server.load(SPRITE_SHEET_PATH));
     let layout = TextureAtlasLayout::from_grid(
         UVec2::new(TILE_W, TILE_H),
         SPRITE_SHEET_W,
@@ -80,17 +111,69 @@ fn spawn_player(
         None,
         None,
     );
-    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+    texture_atlas.0 = Some(texture_atlas_layouts.add(layout));
 
+    next_state.set(GameState::GameInit);
+}
+
+fn setup_camera(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
+}
+
+fn init_world(
+    mut commands: Commands,
+    texture_atlas: Res<GlobalTextureAtlasHandle>,
+    image_handle: Res<GlobalSpriteSheetHandle>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
     commands.spawn((
         SpriteBundle {
             transform: Transform::from_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
-            texture,
+            texture: image_handle.0.clone().unwrap(),
             ..default()
         },
         TextureAtlas {
-            layout: texture_atlas_layout,
+            layout: texture_atlas.0.clone().unwrap(),
             index: 0,
         },
+        Player,
     ));
+
+    next_state.set(GameState::InGame);
+}
+
+fn handle_player_input(
+    mut player_query: Query<&mut Transform, With<Player>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if player_query.is_empty() {
+        return;
+    }
+
+    let mut transform: Mut<Transform> = player_query.single_mut();
+    let w_key: bool =
+        keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp);
+    let s_key: bool =
+        keyboard_input.pressed(KeyCode::KeyS) || keyboard_input.pressed(KeyCode::ArrowDown);
+    let a_key: bool =
+        keyboard_input.pressed(KeyCode::KeyA) || keyboard_input.pressed(KeyCode::ArrowLeft);
+    let d_key: bool =
+        keyboard_input.pressed(KeyCode::KeyD) || keyboard_input.pressed(KeyCode::ArrowRight);
+
+    let mut delta: Vec2 = Vec2::ZERO;
+    if w_key {
+        delta.y += 1.0;
+    }
+    if s_key {
+        delta.y -= 1.0;
+    }
+    if a_key {
+        delta.x -= 1.0;
+    }
+    if d_key {
+        delta.x += 1.0;
+    }
+    delta = delta.normalize_or_zero();
+
+    transform.translation += Vec3 { x: delta.x, y: delta.y, z: 0.0 } * PLAYER_SPEED;
 }

@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+// use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
@@ -42,6 +42,7 @@ const PLAYER_SPEED: f32 = 2.0;
 // Gun
 const GUN_HEIGHT: f32 = 16.0;
 const BULLET_SPAWN_INTERVAL: f32 = 0.1;
+const BULLET_SPEED: f32 = 8.0;
 
 // Colors
 const BG_COLOR: (u8, u8, u8) = (251, 245, 239);
@@ -63,6 +64,8 @@ struct Gun;
 struct GunTimer(Stopwatch);
 #[derive(Component)]
 struct Bullet;
+#[derive(Component)]
+struct BulletDirection(Vec3);
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
@@ -95,8 +98,8 @@ fn main() {
                     ..default()
                 }),
         )
-        .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin)
+        // .add_plugins(LogDiagnosticsPlugin::default())
+        // .add_plugins(FrameTimeDiagnosticsPlugin)
         .insert_resource(ClearColor(Color::srgb_u8(
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))
@@ -115,6 +118,7 @@ fn main() {
                 update_gun_transform,
                 update_cursor_position,
                 handle_gun_input,
+                update_bullets,
             )
                 .run_if(in_state(GameState::InGame)),
         )
@@ -175,7 +179,7 @@ fn init_world(
             index: 2,
         },
         Gun,
-        GunTimer(Stopwatch::new())
+        GunTimer(Stopwatch::new()),
     ));
 
     next_state.set(GameState::InGame);
@@ -241,9 +245,12 @@ fn handle_gun_input(
         return;
     }
 
-    if gun_timer.0.elapsed_secs() < BULLET_SPAWN_INTERVAL{
+    if gun_timer.0.elapsed_secs() < BULLET_SPAWN_INTERVAL {
         return;
     }
+
+    let bullet_direction: Vec3 = gun_transform.local_x().into();
+    let rotation_90 = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
 
     gun_timer.0.reset();
     commands.spawn((
@@ -258,6 +265,7 @@ fn handle_gun_input(
             index: 3,
         },
         Bullet,
+        BulletDirection(rotation_90.mul_vec3(bullet_direction)),
     ));
 }
 
@@ -276,6 +284,18 @@ fn update_cursor_position(
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
         .map(|ray| ray.origin.truncate());
+}
+
+fn update_bullets(
+    mut bullet_query: Query<(&mut Transform, &BulletDirection), With<Bullet>>,
+) {
+    if bullet_query.is_empty(){
+        return;
+    }
+
+    for(mut t, dir) in bullet_query.iter_mut(){
+        t.translation += dir.0.normalize() * Vec3::splat(BULLET_SPEED);
+    }
 }
 
 fn update_gun_transform(

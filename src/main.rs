@@ -1,3 +1,4 @@
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
@@ -78,6 +79,8 @@ fn main() {
                     ..default()
                 }),
         )
+        .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         .insert_resource(ClearColor(Color::srgb_u8(
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))
@@ -175,5 +178,9 @@ fn handle_player_input(
     }
     delta = delta.normalize_or_zero();
 
-    transform.translation += Vec3 { x: delta.x, y: delta.y, z: 0.0 } * PLAYER_SPEED;
+    transform.translation += Vec3 {
+        x: delta.x,
+        y: delta.y,
+        z: 0.0,
+    } * PLAYER_SPEED;
 }

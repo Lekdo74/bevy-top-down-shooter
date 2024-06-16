@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 // use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
@@ -13,6 +15,7 @@ use enemy::EnemyPlugin;
 use gui::GuiPlugin;
 use gun::GunPlugin;
 use player::PlayerPlugin;
+use sound::SoundPlugin;
 use state::GameState;
 use world::WorldPlugin;
 
@@ -45,6 +48,7 @@ fn main() {
         .add_plugins(CloseOnEscapePlugin)
         .add_plugins(FollowCameraPlugin)
         .add_plugins(ResourcesPlugin)
+        .add_plugins(SoundPlugin)
         .add_plugins(WorldPlugin)
         .add_plugins(PlayerPlugin)
         .add_plugins(GunPlugin)

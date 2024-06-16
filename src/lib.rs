@@ -8,6 +8,7 @@ pub mod gui;
 pub mod gun;
 pub mod player;
 pub mod resources;
+pub mod sound;
 pub mod state;
 pub mod world;
 

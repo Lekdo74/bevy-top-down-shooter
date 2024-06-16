@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    enemy::Enemy,
+    enemy::{DefaultSpriteIndex, Enemy},
     player::{Player, PlayerState},
     state::GameState,
     CursorPosition, SPRITE_SHEET_W,
@@ -53,14 +53,16 @@ fn animate_player(
     }
 }
 
-fn animate_enemy(mut enemy_query: Query<(&mut TextureAtlas, &AnimationTimer), With<Enemy>>) {
+fn animate_enemy(
+    mut enemy_query: Query<(&mut TextureAtlas, &AnimationTimer, &DefaultSpriteIndex), With<Enemy>>,
+) {
     if enemy_query.is_empty() {
         return;
     }
 
-    for (mut texture_atlas, timer) in enemy_query.iter_mut() {
+    for (mut texture_atlas, timer, default_sprite_index) in enemy_query.iter_mut() {
         if timer.just_finished() {
-            texture_atlas.index = 8 + (texture_atlas.index + 1) % 4;
+            texture_atlas.index = default_sprite_index.index + (texture_atlas.index + 1) % 4;
         }
     }
 }

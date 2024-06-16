@@ -1,5 +1,5 @@
 use std::f32::consts::PI;
-use std::time::Instant;
+use bevy::utils::Instant;
 
 use bevy::math::vec3;
 use bevy::prelude::*;
@@ -115,7 +115,7 @@ fn handle_gun_input(
 
     gun_timer.0.reset();
 
-    let rotation_90 = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
+    let rotation_90 = Quat::from_rotation_z(PI / 2.0);
     let bullet_direction: Vec3 = rotation_90.mul_vec3(gun_transform.local_x().into());
 
     let mut rng = rand::thread_rng();
@@ -144,12 +144,15 @@ fn handle_gun_input(
     }
 }
 
-fn update_bullets(mut bullet_query: Query<(&mut Transform, &BulletDirection), With<Bullet>>) {
+fn update_bullets(
+    mut bullet_query: Query<(&mut Transform, &BulletDirection), With<Bullet>>,
+    time: Res<Time>,
+) {
     if bullet_query.is_empty() {
         return;
     }
 
     for (mut t, dir) in bullet_query.iter_mut() {
-        t.translation += dir.0.normalize() * Vec3::splat(BULLET_SPEED);
+        t.translation += dir.0.normalize() * Vec3::splat(BULLET_SPEED * time.delta_seconds());
     }
 }

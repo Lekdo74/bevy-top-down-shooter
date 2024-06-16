@@ -1,6 +1,6 @@
 use animation::AnimationTimer;
 use bevy::{math::vec3, prelude::*, time::Stopwatch};
-use player::PlayerState;
+use player::{Health, PlayerState};
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
@@ -22,7 +22,17 @@ impl Plugin for WorldPlugin {
         app.add_systems(
             OnEnter(GameState::GameInit),
             (init_world, spawn_world_decorations).run_if(in_state(GameState::GameInit)),
-        );
+        )
+        .add_systems(OnExit(GameState::InGame), despawn_all_games_entities);
+    }
+}
+
+fn despawn_all_games_entities(
+    mut commands: Commands,
+    all_entities: Query<Entity, With<GameEntity>>,
+) {
+    for e in all_entities.iter() {
+        commands.entity(e).despawn_recursive();
     }
 }
 
@@ -44,7 +54,9 @@ fn init_world(
         },
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         Player,
+        Health(PLAYER_HEALTH),
         PlayerState::default(),
+        GameEntity,
     ));
     commands.spawn((
         SpriteBundle {
@@ -59,6 +71,7 @@ fn init_world(
         },
         Gun,
         GunTimer(Stopwatch::new()),
+        GameEntity,
     ));
 
     next_state.set(GameState::InGame);

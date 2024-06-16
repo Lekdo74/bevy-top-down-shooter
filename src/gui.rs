@@ -1,8 +1,14 @@
 use bevy::{
-    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin}, prelude::*
+    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
+    prelude::*,
 };
 
-use crate::{enemy::Enemy, state::GameState};
+use crate::{
+    enemy::Enemy,
+    player::{Health, Player},
+    state::GameState,
+    world::GameEntity,
+};
 
 pub struct GuiPlugin;
 
@@ -14,8 +20,8 @@ struct MainMenuItem;
 impl Plugin for GuiPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
-        .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
-        .add_systems(OnExit(GameState::MainMenu), despawn_main_menu)
+            .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
+            .add_systems(OnExit(GameState::MainMenu), despawn_main_menu)
             .add_systems(
                 Update,
                 handle_main_menu_buttons.run_if(in_state(GameState::MainMenu)),
@@ -28,11 +34,8 @@ impl Plugin for GuiPlugin {
     }
 }
 
-fn despawn_main_menu (
-    mut commands: Commands,
-    menu_item_query: Query<Entity, With<MainMenuItem>>,
-){
-    for e in menu_item_query.iter(){
+fn despawn_main_menu(mut commands: Commands, menu_item_query: Query<Entity, With<MainMenuItem>>) {
+    for e in menu_item_query.iter() {
         commands.entity(e).despawn_recursive();
     }
 }
@@ -74,7 +77,8 @@ fn setup_main_menu(mut commands: Commands) {
                         },
                     ));
                 });
-        }).insert(MainMenuItem);
+        })
+        .insert(MainMenuItem);
 }
 
 fn handle_main_menu_buttons(
@@ -89,17 +93,18 @@ fn handle_main_menu_buttons(
     }
 }
 
-fn spawn_debug_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn spawn_debug_text(mut commands: Commands) {
     commands.spawn((
         TextBundle::from_section(
-            "Hello",
+            "",
             TextStyle {
-                font: asset_server.load("fonts/FiraSans-Bold.ttf"), // Example font
                 font_size: 40.0,
-                color: Color::WHITE,
+                color: Color::BLACK,
+                ..Default::default()
             },
         ),
         DebugText,
+        GameEntity,
     ));
 }
 
@@ -107,16 +112,18 @@ fn update_debug_text(
     diagnostics: Res<DiagnosticsStore>,
     mut query: Query<&mut Text, With<DebugText>>,
     enemy_query: Query<(), With<Enemy>>,
+    player_query: Query<&Health, With<Player>>,
 ) {
-    if query.is_empty() {
+    if query.is_empty() || player_query.is_empty() || enemy_query.is_empty() {
         return;
     }
 
     let num_enemies = enemy_query.iter().count();
+    let player_health = player_query.single().0;
     let mut text = query.single_mut();
     if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
         if let Some(value) = fps.smoothed() {
-            text.sections[0].value = format!("{value:.2}\n{num_enemies}");
+            text.sections[0].value = format!("{value:.2}\n{num_enemies}\n{player_health}");
         }
     }
 }

@@ -23,5 +23,10 @@ pub const GUN_HEIGHT: f32 = 16.0;
 pub const BULLET_SPAWN_INTERVAL: f32 = 0.1;
 pub const BULLET_SPEED: f32 = 10.0;
 
+// Enemy
+pub const MAX_NUMBER_ENEMY: usize = 500;
+pub const ENEMY_SPAWN_INTERVAL: f32 = 1.0;
+pub const ENEMY_SPEED: f32 = 1.0;
+
 // Colors
 pub const BG_COLOR: (u8, u8, u8) = (251, 245, 239);

@@ -4,6 +4,7 @@ use std::time::Instant;
 use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy::time::Stopwatch;
+use rand::Rng;
 
 use crate::player::Player;
 use crate::state::GameState;
@@ -107,25 +108,35 @@ fn handle_gun_input(
         return;
     }
 
-    let bullet_direction: Vec3 = gun_transform.local_x().into();
-    let rotation_90 = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
-
     gun_timer.0.reset();
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation(vec3(gun_pos.x, gun_pos.y, 11.0))
-                .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
-            texture: handle.image.clone().unwrap(),
-            ..default()
-        },
-        TextureAtlas {
-            layout: handle.layout.clone().unwrap(),
-            index: 16,
-        },
-        Bullet,
-        BulletDirection(rotation_90.mul_vec3(bullet_direction)),
-        SpawnInstant(Instant::now()),
-    ));
+
+    let rotation_90 = Quat::from_rotation_z(std::f32::consts::PI / 2.0);
+    let bullet_direction: Vec3 = rotation_90.mul_vec3(gun_transform.local_x().into());
+
+    let mut rng = rand::thread_rng();
+    for _ in 0..NUM_BULLETS_PER_SHOT{
+        let random_dir = Vec3{
+            x: bullet_direction.x + rng.gen_range(-1.0..1.0),
+            y: bullet_direction.y + rng.gen_range(-1.0..1.0),
+            z: bullet_direction.z,
+        };
+
+        commands.spawn((
+            SpriteBundle {
+                transform: Transform::from_translation(vec3(gun_pos.x, gun_pos.y, 11.0))
+                    .with_scale(Vec3::splat(SPRITE_SCALE_FACTOR)),
+                texture: handle.image.clone().unwrap(),
+                ..default()
+            },
+            TextureAtlas {
+                layout: handle.layout.clone().unwrap(),
+                index: 16,
+            },
+            Bullet,
+            BulletDirection(bullet_direction + random_dir),
+            SpawnInstant(Instant::now()),
+        ));
+    }
 }
 
 fn update_bullets(mut bullet_query: Query<(&mut Transform, &BulletDirection), With<Bullet>>) {

@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use std::time::Duration;
 
 use animation::AnimationTimer;
@@ -38,7 +39,6 @@ fn despawn_dead_enemies(mut commands: Commands, enemy_query: Query<(&Enemy, Enti
 
     for (enemy, entity) in enemy_query.iter() {
         if enemy.health <= 0.0 {
-            print!("{}", enemy.health);
             commands.entity(entity).despawn();
         }
     }
@@ -55,17 +55,17 @@ fn spawn_enemies(
     }
 
     let num_enemies: usize = enemy_query.iter().len();
-    let enemy_spawn_count: usize = (MAX_NUMBER_ENEMY - num_enemies).min(10);
+    let enemy_spawn_count: usize = (MAX_NUMBER_ENEMY - num_enemies).min(SPAWN_RATE_PER_SECOND);
 
     if num_enemies >= MAX_NUMBER_ENEMY {
         return;
     }
 
     let player_pos: Vec2 = player_query.single().translation.truncate();
-    let mut rng: ThreadRng = rand::thread_rng();
     for _ in 0..enemy_spawn_count {
-        let x = rng.gen_range(-WORLD_W..=WORLD_W);
-        let y = rng.gen_range(-WORLD_H..=WORLD_H);
+        let random_position_around_player = get_random_position_around(player_pos);
+        let x = random_position_around_player.0;
+        let y = random_position_around_player.1;
         commands.spawn((
             SpriteBundle {
                 transform: Transform::from_translation(vec3(x, y, 1.0))
@@ -82,6 +82,20 @@ fn spawn_enemies(
             Enemy::default(),
         ));
     }
+}
+
+fn get_random_position_around(pos: Vec2) -> (f32, f32){
+    let mut rng: ThreadRng = rand::thread_rng();
+    let angle = rng.gen_range(0.0..PI * 2.0);
+    let dist = rng.gen_range(2048.0..4096.0);
+
+    let offset_x = dist * angle.cos();
+    let offset_y = dist * angle.sin();
+
+    let random_x = pos.x + offset_x;
+    let random_y = pos.y + offset_y;
+
+    return (random_x, random_y);
 }
 
 impl Default for Enemy {

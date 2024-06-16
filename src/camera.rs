@@ -8,7 +8,7 @@ pub struct FollowCameraPlugin;
 
 impl Plugin for FollowCameraPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::GameInit), setup_camera)
+        app.add_systems(OnEnter(GameState::Loading), setup_camera)
             .add_systems(
                 Update,
                 (camera_follow_player,).run_if(in_state(GameState::InGame)),

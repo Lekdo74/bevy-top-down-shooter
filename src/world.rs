@@ -14,6 +14,9 @@ use crate::{
 
 pub struct WorldPlugin;
 
+#[derive(Component)]
+pub struct GameEntity;
+
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(

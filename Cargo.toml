@@ -5,7 +5,9 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.14.0-rc.2"
+kd-tree = "0.6.0"
 rand = "0.8.5"
+typenum = "1.17.0"
 
 [workspace]
 resolver = "2" # Important! wgpu/Bevy needs this!

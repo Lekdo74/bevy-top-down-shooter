@@ -1,16 +1,25 @@
 use bevy::{
-    color::palettes::css::GOLD,
-    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
-    prelude::*,
+    diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin}, prelude::*
 };
 
 use crate::{enemy::Enemy, state::GameState};
 
 pub struct GuiPlugin;
 
+#[derive(Component)]
+struct DebugText;
+#[derive(Component)]
+struct MainMenuItem;
+
 impl Plugin for GuiPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
+        .add_systems(OnExit(GameState::MainMenu), despawn_main_menu)
+            .add_systems(
+                Update,
+                handle_main_menu_buttons.run_if(in_state(GameState::MainMenu)),
+            )
             .add_systems(OnEnter(GameState::GameInit), spawn_debug_text)
             .add_systems(
                 Update,
@@ -19,20 +28,84 @@ impl Plugin for GuiPlugin {
     }
 }
 
-fn spawn_debug_text(mut commands: Commands) {
-    commands.spawn(TextBundle::from_section(
-        "hello\nbevy!",
-        TextStyle {
-            font_size: 50.0,
-            color: bevy::prelude::Color::Srgba(GOLD),
+fn despawn_main_menu (
+    mut commands: Commands,
+    menu_item_query: Query<Entity, With<MainMenuItem>>,
+){
+    for e in menu_item_query.iter(){
+        commands.entity(e).despawn_recursive();
+    }
+}
+
+fn setup_main_menu(mut commands: Commands) {
+    commands
+        .spawn(NodeBundle {
+            style: Style {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            },
             ..default()
-        },
+        })
+        .with_children(|parent| {
+            parent
+                .spawn(ButtonBundle {
+                    style: Style {
+                        width: Val::Px(150.0),
+                        height: Val::Px(65.0),
+                        border: UiRect::all(Val::Px(5.0)),
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    border_color: BorderColor(Color::BLACK),
+                    border_radius: BorderRadius::MAX,
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section(
+                        "Play",
+                        TextStyle {
+                            font_size: 40.0,
+                            color: Color::BLACK,
+                            ..Default::default()
+                        },
+                    ));
+                });
+        }).insert(MainMenuItem);
+}
+
+fn handle_main_menu_buttons(
+    mut interaction_query: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    for interaction in &mut interaction_query {
+        match interaction {
+            Interaction::Pressed => next_state.set(GameState::GameInit),
+            _ => (),
+        }
+    }
+}
+
+fn spawn_debug_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        TextBundle::from_section(
+            "Hello",
+            TextStyle {
+                font: asset_server.load("fonts/FiraSans-Bold.ttf"), // Example font
+                font_size: 40.0,
+                color: Color::WHITE,
+            },
+        ),
+        DebugText,
     ));
 }
 
 fn update_debug_text(
     diagnostics: Res<DiagnosticsStore>,
-    mut query: Query<&mut Text, With<Text>>,
+    mut query: Query<&mut Text, With<DebugText>>,
     enemy_query: Query<(), With<Enemy>>,
 ) {
     if query.is_empty() {

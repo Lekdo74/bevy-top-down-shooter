@@ -43,7 +43,7 @@ fn load_assets(
     );
     handle.layout = Some(texture_atlas_layouts.add(layout));
 
-    next_state.set(GameState::GameInit);
+    next_state.set(GameState::MainMenu);
 }
 
 fn update_cursor_position(

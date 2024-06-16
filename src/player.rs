@@ -12,7 +12,7 @@ pub struct Player;
 pub enum PlayerState {
     #[default]
     Idle,
-    Moving
+    Moving,
 }
 
 impl Plugin for PlayerPlugin {
@@ -63,10 +63,9 @@ fn handle_player_input(
         z: 0.0,
     } * PLAYER_SPEED;
 
-    if delta != Vec2::ZERO{
+    if delta != Vec2::ZERO {
         *player_state = PlayerState::Moving;
-    }
-    else{
+    } else {
         *player_state = PlayerState::Idle;
     }
 }

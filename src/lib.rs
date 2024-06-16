@@ -1,6 +1,7 @@
 pub mod animation;
 pub mod camera;
 pub mod close_on_esc;
+pub mod collision;
 pub mod constants;
 pub mod enemy;
 pub mod gun;

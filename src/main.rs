@@ -8,6 +8,7 @@ use animation::AnimationPlugin;
 use bevy_top_down_shooter::*;
 use camera::FollowCameraPlugin;
 use close_on_esc::CloseOnEscapePlugin;
+use collision::CollisionPlugin;
 use enemy::EnemyPlugin;
 use gun::GunPlugin;
 use player::PlayerPlugin;
@@ -48,6 +49,7 @@ fn main() {
         .add_plugins(GunPlugin)
         .add_plugins(EnemyPlugin)
         .add_plugins(AnimationPlugin)
+        .add_plugins(CollisionPlugin)
         .insert_resource(ClearColor(Color::srgb_u8(
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))

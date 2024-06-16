@@ -1,4 +1,5 @@
 use std::f32::consts::PI;
+use std::time::Instant;
 
 use bevy::math::vec3;
 use bevy::prelude::*;
@@ -15,17 +16,34 @@ pub struct Gun;
 #[derive(Component)]
 pub struct GunTimer(pub Stopwatch);
 #[derive(Component)]
-struct Bullet;
+pub struct Bullet;
 #[derive(Component)]
 struct BulletDirection(Vec3);
+#[derive(Component)]
+struct SpawnInstant(Instant);
 
 impl Plugin for GunPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (update_gun_transform, update_bullets, handle_gun_input)
+            (update_gun_transform, despawn_old_bullets, update_bullets, handle_gun_input)
                 .run_if(in_state(GameState::InGame)),
         );
+    }
+}
+
+fn despawn_old_bullets(
+    mut commands: Commands,
+    mut bullet_query: Query<(&SpawnInstant, Entity), With<Bullet>>,
+) {
+    if bullet_query.is_empty() {
+        return;
+    }
+
+    for (instant, entity) in bullet_query.iter_mut() {
+        if instant.0.elapsed().as_secs_f32() > BULLET_TIME_SECS {
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -106,6 +124,7 @@ fn handle_gun_input(
         },
         Bullet,
         BulletDirection(rotation_90.mul_vec3(bullet_direction)),
+        SpawnInstant(Instant::now()),
     ));
 }
 

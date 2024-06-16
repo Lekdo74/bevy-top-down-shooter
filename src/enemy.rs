@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use animation::AnimationTimer;
 use bevy::math::vec3;
 use bevy::{prelude::*, time::common_conditions::on_timer};
 use rand::rngs::ThreadRng;
@@ -12,7 +13,9 @@ use crate::*;
 pub struct EnemyPlugin;
 
 #[derive(Component)]
-pub struct Enemy;
+pub struct Enemy {
+    pub health: f32,
+}
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
@@ -20,10 +23,24 @@ impl Plugin for EnemyPlugin {
             Update,
             (
                 spawn_enemies.run_if(on_timer(Duration::from_secs_f32(ENEMY_SPAWN_INTERVAL))),
+                despawn_dead_enemies,
                 update_enemy_transform,
             )
                 .run_if(in_state(GameState::InGame)),
         );
+    }
+}
+
+fn despawn_dead_enemies(mut commands: Commands, enemy_query: Query<(&Enemy, Entity), With<Enemy>>) {
+    if enemy_query.is_empty() {
+        return;
+    }
+
+    for (enemy, entity) in enemy_query.iter() {
+        if enemy.health <= 0.0 {
+            print!("{}", enemy.health);
+            commands.entity(entity).despawn();
+        }
     }
 }
 
@@ -61,8 +78,17 @@ fn spawn_enemies(
                 layout: handle.layout.clone().unwrap(),
                 index: 8,
             },
-            Enemy,
+            AnimationTimer(Timer::from_seconds(0.08, TimerMode::Repeating)),
+            Enemy::default(),
         ));
+    }
+}
+
+impl Default for Enemy {
+    fn default() -> Self {
+        Self {
+            health: ENEMY_HEALTH,
+        }
     }
 }
 

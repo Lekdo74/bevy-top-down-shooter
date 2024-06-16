@@ -1,5 +1,6 @@
 use animation::AnimationTimer;
 use bevy::{math::vec3, prelude::*, time::Stopwatch};
+use player::PlayerState;
 use rand::rngs::ThreadRng;
 use rand::Rng;
 
@@ -40,6 +41,7 @@ fn init_world(
         },
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         Player,
+        PlayerState::default(),
     ));
     commands.spawn((
         SpriteBundle {

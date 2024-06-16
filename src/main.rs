@@ -4,6 +4,7 @@ use bevy::render::settings::{Backends, RenderCreation, WgpuSettings};
 use bevy::render::RenderPlugin;
 use bevy::window::WindowMode;
 
+use animation::AnimationPlugin;
 use bevy_top_down_shooter::*;
 use camera::FollowCameraPlugin;
 use close_on_esc::CloseOnEscapePlugin;
@@ -12,7 +13,6 @@ use gun::GunPlugin;
 use player::PlayerPlugin;
 use state::GameState;
 use world::WorldPlugin;
-use animation::AnimationPlugin;
 
 fn main() {
     App::new()

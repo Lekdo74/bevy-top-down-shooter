@@ -8,6 +8,13 @@ pub struct PlayerPlugin;
 #[derive(Component)]
 pub struct Player;
 
+#[derive(Component, Default)]
+pub enum PlayerState {
+    #[default]
+    Idle,
+    Moving
+}
+
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
@@ -18,14 +25,14 @@ impl Plugin for PlayerPlugin {
 }
 
 fn handle_player_input(
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player_query: Query<(&mut Transform, &mut PlayerState), With<Player>>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if player_query.is_empty() {
         return;
     }
 
-    let mut transform: Mut<Transform> = player_query.single_mut();
+    let (mut transform, mut player_state) = player_query.single_mut();
     let w_key: bool =
         keyboard_input.pressed(KeyCode::KeyW) || keyboard_input.pressed(KeyCode::ArrowUp);
     let s_key: bool =
@@ -55,4 +62,11 @@ fn handle_player_input(
         y: delta.y,
         z: 0.0,
     } * PLAYER_SPEED;
+
+    if delta != Vec2::ZERO{
+        *player_state = PlayerState::Moving;
+    }
+    else{
+        *player_state = PlayerState::Idle;
+    }
 }

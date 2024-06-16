@@ -12,6 +12,7 @@ use gun::GunPlugin;
 use player::PlayerPlugin;
 use state::GameState;
 use world::WorldPlugin;
+use animation::AnimationPlugin;
 
 fn main() {
     App::new()
@@ -46,6 +47,7 @@ fn main() {
         .add_plugins(PlayerPlugin)
         .add_plugins(GunPlugin)
         .add_plugins(EnemyPlugin)
+        .add_plugins(AnimationPlugin)
         .insert_resource(ClearColor(Color::srgb_u8(
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))

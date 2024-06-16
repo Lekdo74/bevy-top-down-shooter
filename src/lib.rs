@@ -1,3 +1,4 @@
+pub mod animation;
 pub mod camera;
 pub mod close_on_esc;
 pub mod constants;

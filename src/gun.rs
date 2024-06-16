@@ -32,7 +32,7 @@ impl Plugin for GunPlugin {
 fn update_gun_transform(
     cursor_pos: Res<CursorPosition>,
     player_query: Query<&Transform, With<Player>>,
-    mut gun_query: Query<&mut Transform, (With<Gun>, Without<Player>)>,
+    mut gun_query: Query<(&mut Sprite, &mut Transform), (With<Gun>, Without<Player>)>,
 ) {
     if player_query.is_empty() || gun_query.is_empty() {
         return;
@@ -43,13 +43,25 @@ fn update_gun_transform(
         Some(pos) => pos,
         None => player_pos,
     };
-    let mut gun_transform = gun_query.single_mut();
+    let mut gun = gun_query.single_mut();
+    let mut gun_transform = gun.1;
 
-    let gun_offset = Vec3::new(4.0, -8.0, 0.0);
+    let mut gun_offset = Vec3::new(4.0, -8.0, 0.0);
+    let mut angle_on_player_facing = PI / 2.0;
 
-    let angle: f32 =
-        (cursor_pos.y - player_pos.y - gun_offset.y).atan2(cursor_pos.x - player_pos.x) - PI / 2.0;
+    let mut angle: f32 =
+        (cursor_pos.y - player_pos.y - gun_offset.y).atan2(cursor_pos.x - player_pos.x) - angle_on_player_facing;
     let rotation_quat = Quat::from_rotation_z(angle);
+
+    if cursor_pos.x < player_pos.x{
+        gun_offset = Vec3::new(-4.0, -8.0, 0.0);
+        angle_on_player_facing += PI;
+        gun.0.flip_x = true;
+        angle *= -1.0;
+    }
+    else {
+        gun.0.flip_x = false;
+    }
 
     let origin_offset = Vec3::new(0.0, GUN_HEIGHT * SPRITE_SCALE_FACTOR / 2.0, 0.0);
 
@@ -96,7 +108,7 @@ fn handle_gun_input(
         },
         TextureAtlas {
             layout: handle.layout.clone().unwrap(),
-            index: 3,
+            index: 16,
         },
         Bullet,
         BulletDirection(rotation_90.mul_vec3(bullet_direction)),

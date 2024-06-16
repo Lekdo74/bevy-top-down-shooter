@@ -59,7 +59,7 @@ fn spawn_enemies(
             },
             TextureAtlas {
                 layout: handle.layout.clone().unwrap(),
-                index: 1,
+                index: 8,
             },
             Enemy,
         ));

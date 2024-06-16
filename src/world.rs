@@ -1,3 +1,4 @@
+use animation::AnimationTimer;
 use bevy::{math::vec3, prelude::*, time::Stopwatch};
 use rand::rngs::ThreadRng;
 use rand::Rng;
@@ -37,6 +38,7 @@ fn init_world(
             layout: handle.layout.clone().unwrap(),
             index: 0,
         },
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         Player,
     ));
     commands.spawn((
@@ -48,7 +50,7 @@ fn init_world(
         },
         TextureAtlas {
             layout: handle.layout.clone().unwrap(),
-            index: 2,
+            index: 17,
         },
         Gun,
         GunTimer(Stopwatch::new()),
@@ -71,7 +73,7 @@ fn spawn_world_decorations(mut commands: Commands, handle: Res<GlobalTextureAtla
             },
             TextureAtlas {
                 layout: handle.layout.clone().unwrap(),
-                index: rng.gen_range(4..=6),
+                index: rng.gen_range(24..=27),
             },
         ));
     }

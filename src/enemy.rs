@@ -84,7 +84,7 @@ fn spawn_enemies(
     }
 }
 
-fn get_random_position_around(pos: Vec2) -> (f32, f32){
+fn get_random_position_around(pos: Vec2) -> (f32, f32) {
     let mut rng: ThreadRng = rand::thread_rng();
     let angle = rng.gen_range(0.0..PI * 2.0);
     let dist = rng.gen_range(2048.0..4096.0);

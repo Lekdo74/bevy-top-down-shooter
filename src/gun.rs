@@ -27,7 +27,12 @@ impl Plugin for GunPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (update_gun_transform, despawn_old_bullets, update_bullets, handle_gun_input)
+            (
+                update_gun_transform,
+                despawn_old_bullets,
+                update_bullets,
+                handle_gun_input,
+            )
                 .run_if(in_state(GameState::InGame)),
         );
     }
@@ -114,8 +119,8 @@ fn handle_gun_input(
     let bullet_direction: Vec3 = rotation_90.mul_vec3(gun_transform.local_x().into());
 
     let mut rng = rand::thread_rng();
-    for _ in 0..NUM_BULLETS_PER_SHOT{
-        let random_dir = Vec3{
+    for _ in 0..NUM_BULLETS_PER_SHOT {
+        let random_dir = Vec3 {
             x: bullet_direction.x + rng.gen_range(-1.0..1.0),
             y: bullet_direction.y + rng.gen_range(-1.0..1.0),
             z: bullet_direction.z,

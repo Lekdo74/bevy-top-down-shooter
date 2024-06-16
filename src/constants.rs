@@ -27,8 +27,8 @@ pub const BULLET_TIME_SECS: f32 = 1.0;
 pub const NUM_BULLETS_PER_SHOT: usize = 5;
 
 // Enemy
-pub const MAX_NUMBER_ENEMY: usize = 50000;
-pub const SPAWN_RATE_PER_SECOND: usize = 500;
+pub const MAX_NUMBER_ENEMY: usize = 100_000;
+pub const SPAWN_RATE_PER_SECOND: usize = 2_000;
 pub const ENEMY_HEALTH: f32 = 100.0;
 pub const ENEMY_SPAWN_INTERVAL: f32 = 1.0;
 pub const ENEMY_SPEED: f32 = 1.0;

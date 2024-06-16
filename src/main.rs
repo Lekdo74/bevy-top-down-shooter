@@ -10,6 +10,7 @@ use camera::FollowCameraPlugin;
 use close_on_esc::CloseOnEscapePlugin;
 use collision::CollisionPlugin;
 use enemy::EnemyPlugin;
+use gui::GuiPlugin;
 use gun::GunPlugin;
 use player::PlayerPlugin;
 use state::GameState;
@@ -50,6 +51,7 @@ fn main() {
         .add_plugins(EnemyPlugin)
         .add_plugins(AnimationPlugin)
         .add_plugins(CollisionPlugin)
+        .add_plugins(GuiPlugin)
         .insert_resource(ClearColor(Color::srgb_u8(
             BG_COLOR.0, BG_COLOR.1, BG_COLOR.2,
         )))
